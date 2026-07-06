@@ -108,4 +108,23 @@ describe('Borrow.js MVP', () => {
     user.profile.age = 31;
     expect(user.profile.age).toBe(31);
   });
+
+  test('scoped borrows with the using keyword (Symbol.dispose)', () => {
+    const user = own({ name: 'Prince' });
+
+    {
+      using ref = borrow(user);
+      expect(ref.name).toBe('Prince');
+      
+      // Should throw because it's actively borrowed in this scope
+      expect(() => {
+        user.name = 'John';
+      }).toThrow(BorrowError);
+    } // ref is automatically disposed here
+
+    // Safe to mutate after the block!
+    user.name = 'John';
+    expect(user.name).toBe('John');
+  });
 });
+

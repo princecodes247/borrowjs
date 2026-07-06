@@ -4,7 +4,7 @@ import { BorrowError } from '../errors/BorrowError';
 import { MovedError } from '../errors/MovedError';
 import { getCallerLocation } from '../utils/stack';
 
-export function borrow<T extends object>(owner: T): T {
+export function borrow<T extends object>(owner: T): Readonly<T> & Disposable {
   const state = registry.get(owner);
   if (!state) {
     throw new Error('Object is not owned. Cannot borrow.');
@@ -25,5 +25,5 @@ export function borrow<T extends object>(owner: T): T {
   state.immutableBorrows.set(ref, location);
   borrowToState.set(ref, state);
   
-  return ref;
+  return ref as Readonly<T> & Disposable;
 }

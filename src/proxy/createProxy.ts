@@ -1,10 +1,14 @@
 import { BorrowError } from '../errors/BorrowError';
 import { MovedError } from '../errors/MovedError';
 import { OwnershipState } from '../ownership/registry';
+import { release } from '../borrow/release';
 
 export type ProxyType = 'owner' | 'immutable' | 'mutable';
 
 export const RAW_TARGET = Symbol('RAW_TARGET');
+
+// Fallback for Symbol.dispose if not available in current environment
+const DISPOSE = Symbol.dispose ?? Symbol.for('Symbol.dispose');
 
 export function createProxy<T extends object>(
   target: T,
@@ -16,6 +20,12 @@ export function createProxy<T extends object>(
     get(t, prop, receiver) {
       if (prop === RAW_TARGET) {
         return target;
+      }
+
+      if (prop === DISPOSE) {
+        return () => {
+          try { release(receiver); } catch (e) { /* ignore already released */ }
+        };
       }
       
       if (state.moved) {

@@ -49,7 +49,24 @@ release(ref);
 user.name = "John"; // ✅ Success, borrow was released
 ```
 
-### 3. Mutable Borrows
+### 3. Scoped Borrows (Automatic Release)
+Using TypeScript 5.2's Explicit Resource Management, you can use the `using` keyword to automatically release borrows when they go out of scope, exactly like Rust's lexical lifetimes!
+
+```typescript
+import { own, borrow } from 'borrowjs';
+
+const user = own({ name: 'Prince' });
+
+{
+  using ref = borrow(user);
+  console.log(ref.name); // "Prince"
+  // user.name = "John"; // ❌ Throws BorrowError
+} // ref is automatically released here!
+
+user.name = "John"; // ✅ Success!
+```
+
+### 4. Mutable Borrows
 ```typescript
 import { own, borrowMut, release } from 'borrowjs';
 

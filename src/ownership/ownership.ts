@@ -7,7 +7,7 @@ export function own<T extends object>(obj: T): T {
 
   const state: OwnershipState = {
     moved: false,
-    immutableBorrows: new Set(),
+    immutableBorrows: new Map(),
     mutableBorrow: null,
     metadata: {
       createdAt: Date.now()

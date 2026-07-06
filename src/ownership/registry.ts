@@ -1,7 +1,7 @@
 export interface OwnershipState {
   moved: boolean;
-  immutableBorrows: Set<object>;
-  mutableBorrow: object | null;
+  immutableBorrows: Map<object, string>;
+  mutableBorrow: { token: object; borrowedAt: string } | null;
   metadata: {
     createdAt: number;
   };

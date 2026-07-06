@@ -2,6 +2,7 @@ import { registry, borrowToState } from '../ownership/registry';
 import { createProxy, RAW_TARGET } from '../proxy/createProxy';
 import { BorrowError } from '../errors/BorrowError';
 import { MovedError } from '../errors/MovedError';
+import { getCallerLocation } from '../utils/stack';
 
 export function borrow<T extends object>(owner: T): T {
   const state = registry.get(owner);
@@ -14,13 +15,14 @@ export function borrow<T extends object>(owner: T): T {
   }
 
   if (state.mutableBorrow !== null) {
-    throw new BorrowError('Cannot immutably borrow because the object is currently borrowed mutably.');
+    throw new BorrowError('Cannot immutably borrow because the object is currently borrowed mutably.', state);
   }
 
   const target = (owner as any)[RAW_TARGET] || owner;
   const ref = createProxy(target as T, state, 'immutable');
   
-  state.immutableBorrows.add(ref);
+  const location = getCallerLocation();
+  state.immutableBorrows.set(ref, location);
   borrowToState.set(ref, state);
   
   return ref;

@@ -42,21 +42,21 @@ export function createProxy<T extends object>(
       }
       
       if (proxyType === 'immutable') {
-        throw new BorrowError(`Cannot mutably access property '${String(prop)}' because it is currently immutably borrowed.`);
+        throw new BorrowError(`Cannot mutably access property '${String(prop)}' because it is currently immutably borrowed.`, state);
       }
       
       if (proxyType === 'owner') {
         if (state.immutableBorrows.size > 0) {
-          throw new BorrowError(`Cannot mutably access property '${String(prop)}' because the object is currently borrowed immutably.`);
+          throw new BorrowError(`Cannot mutably access property '${String(prop)}' because the object is currently borrowed immutably.`, state);
         }
         if (state.mutableBorrow !== null) {
-          throw new BorrowError(`Cannot mutably access property '${String(prop)}' because the object is currently borrowed mutably.`);
+          throw new BorrowError(`Cannot mutably access property '${String(prop)}' because the object is currently borrowed mutably.`, state);
         }
       }
       
       if (proxyType === 'mutable') {
-        if (state.mutableBorrow !== borrowRef) {
-          throw new BorrowError(`Cannot mutably access property '${String(prop)}' through an invalid mutable borrow.`);
+        if (state.mutableBorrow?.token !== borrowRef) {
+          throw new BorrowError(`Cannot mutably access property '${String(prop)}' through an invalid mutable borrow.`, state);
         }
       }
       
@@ -69,20 +69,20 @@ export function createProxy<T extends object>(
       }
       
       if (proxyType === 'immutable') {
-        throw new BorrowError(`Cannot delete property '${String(prop)}' because it is currently immutably borrowed.`);
+        throw new BorrowError(`Cannot delete property '${String(prop)}' because it is currently immutably borrowed.`, state);
       }
       
       if (proxyType === 'owner') {
         if (state.immutableBorrows.size > 0) {
-          throw new BorrowError(`Cannot delete property '${String(prop)}' because the object is currently borrowed immutably.`);
+          throw new BorrowError(`Cannot delete property '${String(prop)}' because the object is currently borrowed immutably.`, state);
         }
         if (state.mutableBorrow !== null) {
-          throw new BorrowError(`Cannot delete property '${String(prop)}' because the object is currently borrowed mutably.`);
+          throw new BorrowError(`Cannot delete property '${String(prop)}' because the object is currently borrowed mutably.`, state);
         }
       }
       
-      if (proxyType === 'mutable' && state.mutableBorrow !== borrowRef) {
-        throw new BorrowError(`Cannot delete property '${String(prop)}' through an invalid mutable borrow.`);
+      if (proxyType === 'mutable' && state.mutableBorrow?.token !== borrowRef) {
+        throw new BorrowError(`Cannot delete property '${String(prop)}' through an invalid mutable borrow.`, state);
       }
       
       return Reflect.deleteProperty(t, prop);

@@ -1,16 +1,8 @@
-import { borrowToState } from '../ownership/registry';
-
-export function release(ref: object): void {
-  const state = borrowToState.get(ref);
-  if (!state) {
-    throw new Error('Invalid reference or already released.');
-  }
-
-  if (state.immutableBorrows.has(ref)) {
-    state.immutableBorrows.delete(ref);
-  } else {
-    state.mutableBorrow = null;
-  }
-  
-  borrowToState.delete(ref);
+/**
+ * Releases a borrow.
+ * At runtime, this is a no-op.
+ * The Babel plugin uses this to track the end of a borrow's lifetime early.
+ */
+export function release<T extends object>(ref: T): void {
+  // No-op at runtime
 }

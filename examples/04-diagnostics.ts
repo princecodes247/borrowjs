@@ -23,3 +23,8 @@ try {
   console.log('When you violate a borrow rule, Borrow.js provides a helpful stack trace and visual ownership tree:\n');
   console.log(e.message);
 }
+
+function toUpperCase(input: unknown) {
+  if (typeof input !== "string") throw new Error("Not a string")
+  input.toUpperCase() // input is now typed as string, no cast needed
+}

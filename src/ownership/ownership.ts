@@ -1,58 +1,29 @@
-import { registry, OwnershipState } from './registry';
-import { createProxy, RAW_TARGET } from '../proxy/createProxy';
-import { MovedError } from '../errors/MovedError';
-
 export type Boxed<T> = T extends object ? T : { value: T };
 
+/**
+ * Marks an object or primitive as "owned".
+ * At runtime, this is a zero-cost abstraction that simply boxes primitives
+ * and returns objects exactly as they are.
+ * The Babel plugin enforces ownership rules at compile-time.
+ */
 export function own<T>(obj: T): Boxed<T> {
   const isPrimitive = typeof obj !== 'object' || obj === null;
-  const targetToOwn = isPrimitive ? { value: obj } : obj;
-  
-  const secureTarget = typeof structuredClone === 'function' ? structuredClone(targetToOwn) : JSON.parse(JSON.stringify(targetToOwn));
-
-  const state: OwnershipState = {
-    moved: false,
-    immutableBorrows: new Map(),
-    mutableBorrow: null,
-    metadata: {
-      createdAt: Date.now()
-    }
-  };
-
-  const ownerProxy = createProxy(secureTarget as any, state, 'owner');
-  registry.set(ownerProxy, state);
-  
-  return ownerProxy as Boxed<T>;
+  return (isPrimitive ? { value: obj } : obj) as Boxed<T>;
 }
 
+/**
+ * Transfers ownership of the value to a new reference.
+ * The old reference becomes invalid at compile-time.
+ */
 export function move<T extends object>(owner: T): T {
-  const state = registry.get(owner);
-  if (!state) {
-    throw new Error('Object is not owned. Cannot move.');
-  }
-
-  if (state.moved) {
-    throw new MovedError('Object has already been moved.');
-  }
-
-  const target = (owner as any)[RAW_TARGET] || owner;
-  const newValue = typeof structuredClone === 'function' ? structuredClone(target) : JSON.parse(JSON.stringify(target));
-  state.moved = true; 
-
-  return own(newValue);
+  return owner;
 }
 
+/**
+ * Creates a deep clone of the value.
+ */
 export function clone<T extends object>(owner: T): T {
-  const state = registry.get(owner);
-  if (!state) {
-    throw new Error('Object is not owned. Cannot clone.');
-  }
-  
-  if (state.moved) {
-    throw new MovedError('Cannot clone a moved object.');
-  }
-
-  const target = (owner as any)[RAW_TARGET] || owner;
-  const newValue = typeof structuredClone === 'function' ? structuredClone(target) : JSON.parse(JSON.stringify(target));
-  return own(newValue);
+  return typeof structuredClone === 'function' 
+    ? structuredClone(owner) 
+    : JSON.parse(JSON.stringify(owner));
 }

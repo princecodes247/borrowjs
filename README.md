@@ -1,97 +1,49 @@
-# Borrow.js
+# Borrow.js (Compile-Time Edition)
 
-Borrow.js is a lightweight library that introduces Rust-inspired ownership and borrowing semantics. It enforces safe access patterns at runtime, producing rich, developer-friendly diagnostics when rules are violated.
+Borrow.js is a zero-cost abstraction library that introduces Rust-inspired ownership and borrowing semantics to JavaScript. It enforces safe access patterns **at compile-time** using a Babel plugin.
 
-No transpilers or build plugins are required—everything works out of the box using modern JavaScript Proxies!
+Because it runs at compile-time, there are **no Proxies, no deep cloning, and zero runtime overhead**. At runtime, `own()` and `borrow()` compile away to nothing, and referential equality (`user === ref`) is completely preserved!
 
 ## Core Concepts
 
 - **Ownership**: Each managed object has exactly one owner.
-- **Immutable Borrow**: You can create any number of immutable borrows. The original owner cannot mutate the object while these borrows exist.
-- **Mutable Borrow**: You can create exactly one mutable borrow. No other borrows (mutable or immutable) can exist at the same time, and the owner loses access until it's released.
-- **Move Semantics**: Transfer ownership from one reference to another, immediately invalidating the old reference.
+- **Immutable Borrow**: You can create any number of immutable borrows. The original owner cannot mutate the object while these borrows exist in the lexical scope.
+- **Mutable Borrow**: You can create exactly one mutable borrow. No other borrows (mutable or immutable) can exist at the same time, and the owner loses access.
 
 ## Installation
 
 ```bash
 npm install borrowjs
+npm install -D @babel/core @babel/traverse
+```
+
+To enable the compiler, add the Babel plugin to your configuration (e.g. `babel.config.js` or Vite config):
+```javascript
+module.exports = {
+  plugins: ['borrowjs/babel/plugin']
+}
 ```
 
 ## Usage
 
-### 1. Ownership & Safe Mutation
+### 1. Zero-Cost Ownership
 ```typescript
 import { own } from 'borrowjs';
 
-const user = own({ name: 'Prince', age: 25 });
-user.age = 26; // Success!
+const user = own({ name: 'Prince' });
+// Because there is no runtime proxy, user === your object!
 ```
 
-### 2. Immutable Borrows
+### 2. Compile-Time Borrows
 ```typescript
-import { own, borrow, release } from 'borrowjs';
+import { own, borrow } from 'borrowjs';
 
 const user = own({ name: 'Prince' });
 
 // Create an immutable reference
 const ref = borrow(user);
 
-console.log(ref.name); // "Prince"
+// user.name = "John"; // ❌ Babel THROWS A BUILD ERROR: "BorrowError: Cannot mutate property of 'user' because it is currently borrowed."
 
-// user.name = "John"; // ❌ Throws BorrowError
-// ref.name = "John";  // ❌ Throws BorrowError
-
-release(ref);
-
-user.name = "John"; // ✅ Success, borrow was released
+console.log(ref.name);
 ```
-
-### 3. Mutable Borrows
-```typescript
-import { own, borrowMut, release } from 'borrowjs';
-
-const user = own({ name: 'Prince' });
-
-// Create an exclusive mutable reference
-const mutRef = borrowMut(user);
-
-mutRef.name = "Alice"; // ✅ Success
-
-// user.name = "John"; // ❌ Throws BorrowError (Owner locked)
-// borrow(user);       // ❌ Throws BorrowError (Cannot borrow immutably right now)
-
-release(mutRef);
-
-console.log(user.name); // "Alice"
-```
-
-### 4. Move Semantics
-```typescript
-import { own, move } from 'borrowjs';
-
-const user = own({ name: 'Prince' });
-const newUser = move(user);
-
-console.log(newUser.name); // "Prince"
-// user.name; // ❌ Throws MovedError
-```
-
-## Rich Diagnostics
-
-Borrow.js generates highly detailed error messages that pinpoint exactly *where* conflicts originated, making debugging effortless:
-
-```
-BorrowError: Cannot mutably access property 'name' because the object is currently borrowed immutably.
-
-Active Borrows:
-Owner
- │
- ├── Immutable Ref (at myFunction (/src/app.ts:15:10))
- └── Immutable Ref (at /src/app.ts:16:20)
-
-Suggestion: Call release(ref) on active borrows before conflicting operations.
-```
-
-## License
-
-MIT

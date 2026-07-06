@@ -2,8 +2,13 @@ import { registry, OwnershipState } from './registry';
 import { createProxy, RAW_TARGET } from '../proxy/createProxy';
 import { MovedError } from '../errors/MovedError';
 
-export function own<T extends object>(obj: T): T {
-  const secureTarget = typeof structuredClone === 'function' ? structuredClone(obj) : JSON.parse(JSON.stringify(obj));
+export type Boxed<T> = T extends object ? T : { value: T };
+
+export function own<T>(obj: T): Boxed<T> {
+  const isPrimitive = typeof obj !== 'object' || obj === null;
+  const targetToOwn = isPrimitive ? { value: obj } : obj;
+  
+  const secureTarget = typeof structuredClone === 'function' ? structuredClone(targetToOwn) : JSON.parse(JSON.stringify(targetToOwn));
 
   const state: OwnershipState = {
     moved: false,
@@ -14,10 +19,10 @@ export function own<T extends object>(obj: T): T {
     }
   };
 
-  const ownerProxy = createProxy(secureTarget, state, 'owner');
+  const ownerProxy = createProxy(secureTarget as any, state, 'owner');
   registry.set(ownerProxy, state);
   
-  return ownerProxy;
+  return ownerProxy as Boxed<T>;
 }
 
 export function move<T extends object>(owner: T): T {

@@ -2,6 +2,18 @@ import { expect, test, describe } from 'vitest';
 import { own, borrow, borrowMut, release, move, BorrowError, MovedError } from '../src/index';
 
 describe('Borrow.js MVP', () => {
+  test('own boxes primitive values', () => {
+    const age = own(25);
+    expect(age.value).toBe(25);
+    age.value = 26;
+    expect(age.value).toBe(26);
+
+    const mutRef = borrowMut(age);
+    mutRef.value = 27;
+    release(mutRef);
+    expect(age.value).toBe(27);
+  });
+
   test('own and mutate safely', () => {
     const user = own({ name: 'Prince' });
     expect(user.name).toBe('Prince');

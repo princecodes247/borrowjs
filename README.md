@@ -23,6 +23,7 @@ npm install borrowjs
 ## Usage
 
 ### 1. Ownership & Safe Mutation
+
 ```typescript
 import { own } from 'borrowjs';
 
@@ -31,6 +32,7 @@ user.age = 26;
 ```
 
 ### 2. Immutable Borrows
+
 ```typescript
 import { own, borrow, release } from 'borrowjs';
 
@@ -47,8 +49,10 @@ console.log(ref.name); // "Prince"
 release(ref);
 
 user.name = "John";
+```
 
 ### 3. Scoped Borrows (Automatic Release)
+
 You can use the `using` keyword to automatically release borrows when they go out of scope, exactly like Rust's lexical lifetimes!
 
 ```typescript
@@ -66,6 +70,7 @@ user.name = "John";
 ```
 
 ### 4. Mutable Borrows
+
 ```typescript
 import { own, borrowMut, release } from 'borrowjs';
 
@@ -85,6 +90,7 @@ console.log(user.name); // "Alice"
 ```
 
 ### 4. Move Semantics
+
 ```typescript
 import { own, move } from 'borrowjs';
 

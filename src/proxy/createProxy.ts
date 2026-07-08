@@ -1,11 +1,9 @@
 import { BorrowError } from '../errors/BorrowError';
 import { MovedError } from '../errors/MovedError';
-import { OwnershipState } from '../ownership/registry';
+import { OwnershipState, proxyToRaw } from '../ownership/registry';
 import { release } from '../borrow/release';
 
 export type ProxyType = 'owner' | 'immutable' | 'mutable';
-
-export const RAW_TARGET = Symbol('RAW_TARGET');
 
 // Fallback for Symbol.dispose if not available in current environment
 const DISPOSE = Symbol.dispose ?? Symbol.for('Symbol.dispose');
@@ -16,11 +14,9 @@ export function createProxy<T extends object>(
   proxyType: ProxyType,
   borrowRef?: object
 ): T {
+  const valueCache = new WeakMap<object, any>();
   const handler: ProxyHandler<T> = {
     get(t, prop, receiver) {
-      if (prop === RAW_TARGET) {
-        return target;
-      }
 
       if (prop === DISPOSE) {
         return () => {
@@ -35,12 +31,18 @@ export function createProxy<T extends object>(
       const value = Reflect.get(t, prop, receiver);
       
       if (typeof value === 'object' && value !== null) {
+        if (valueCache.has(value)) return valueCache.get(value);
         // Deep proxy for nested objects
-        return createProxy(value, state, proxyType, borrowRef);
+        const childProxy = createProxy(value, state, proxyType, borrowRef);
+        valueCache.set(value, childProxy);
+        return childProxy;
       }
       
       if (typeof value === 'function') {
-        return value.bind(receiver);
+        if (valueCache.has(value)) return valueCache.get(value);
+        const bound = value.bind(receiver);
+        valueCache.set(value, bound);
+        return bound;
       }
       
       return value;
@@ -99,5 +101,7 @@ export function createProxy<T extends object>(
     }
   };
   
-  return new Proxy(target, handler);
+  const proxy = new Proxy(target, handler);
+  proxyToRaw.set(proxy, target);
+  return proxy;
 }

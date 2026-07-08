@@ -12,3 +12,5 @@ export const registry = new WeakMap<object, OwnershipState>();
 // We also need a way to track which borrow corresponds to which state
 // so we can release them properly.
 export const borrowToState = new WeakMap<object, OwnershipState>();
+
+export const proxyToRaw = new WeakMap<object, any>();

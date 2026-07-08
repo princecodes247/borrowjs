@@ -1,5 +1,5 @@
-import { registry, borrowToState } from '../ownership/registry';
-import { createProxy, RAW_TARGET } from '../proxy/createProxy';
+import { registry, borrowToState, proxyToRaw } from '../ownership/registry';
+import { createProxy } from '../proxy/createProxy';
 import { BorrowError } from '../errors/BorrowError';
 import { MovedError } from '../errors/MovedError';
 import { getCallerLocation } from '../utils/stack';
@@ -22,7 +22,7 @@ export function borrowMut<T extends object>(owner: T): T & Disposable {
     throw new BorrowError('Cannot mutably borrow because the object is currently borrowed immutably.', state);
   }
 
-  const target = (owner as any)[RAW_TARGET] || owner;
+  const target = proxyToRaw.get(owner) || owner;
   const borrowRef = {}; // Unique token for this borrow session
   const ref = createProxy(target as T, state, 'mutable', borrowRef);
   

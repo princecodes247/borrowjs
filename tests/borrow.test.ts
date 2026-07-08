@@ -126,5 +126,38 @@ describe('Borrow.js MVP', () => {
     user.name = 'John';
     expect(user.name).toBe('John');
   });
-});
+  test('move throws when actively borrowed', () => {
+    const user = own({ name: 'Prince' });
+    const ref = borrow(user);
 
+    expect(() => {
+      move(user);
+    }).toThrow(BorrowError);
+
+    release(ref);
+    const newUser = move(user); // works now
+    expect(newUser.name).toBe('Prince');
+  });
+
+  test('proxy preserves object identity for nested objects', () => {
+    const user = own({ profile: { age: 30 } });
+    const ref = borrowMut(user);
+
+    // Identity should be preserved
+    expect(ref.profile === ref.profile).toBe(true);
+    
+    release(ref);
+  });
+
+  test('own seals the object, preventing structural mutation', () => {
+    const user = own({ name: 'Prince' }) as any;
+
+    expect(() => {
+      user.age = 25; // Adding new property
+    }).toThrow(TypeError);
+
+    expect(() => {
+      delete user.name; // Deleting property
+    }).toThrow(TypeError);
+  });
+});

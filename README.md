@@ -27,7 +27,7 @@ npm install borrowjs
 import { own } from 'borrowjs';
 
 const user = own({ name: 'Prince', age: 25 });
-user.age = 26; // Success!
+user.age = 26;
 ```
 
 ### 2. Immutable Borrows
@@ -41,16 +41,15 @@ const ref = borrow(user);
 
 console.log(ref.name); // "Prince"
 
-// user.name = "John"; // ❌ Throws BorrowError
-// ref.name = "John";  // ❌ Throws BorrowError
+// user.name = "John"; // Throws BorrowError
+// ref.name = "John";  // Throws BorrowError
 
 release(ref);
 
-user.name = "John"; // ✅ Success, borrow was released
-```
+user.name = "John";
 
 ### 3. Scoped Borrows (Automatic Release)
-Using TypeScript 5.2's Explicit Resource Management, you can use the `using` keyword to automatically release borrows when they go out of scope, exactly like Rust's lexical lifetimes!
+You can use the `using` keyword to automatically release borrows when they go out of scope, exactly like Rust's lexical lifetimes!
 
 ```typescript
 import { own, borrow } from 'borrowjs';
@@ -60,10 +59,10 @@ const user = own({ name: 'Prince' });
 {
   using ref = borrow(user);
   console.log(ref.name); // "Prince"
-  // user.name = "John"; // ❌ Throws BorrowError
+  // user.name = "John"; // Throws BorrowError
 } // ref is automatically released here!
 
-user.name = "John"; // ✅ Success!
+user.name = "John";
 ```
 
 ### 4. Mutable Borrows
@@ -75,10 +74,10 @@ const user = own({ name: 'Prince' });
 // Create an exclusive mutable reference
 const mutRef = borrowMut(user);
 
-mutRef.name = "Alice"; // ✅ Success
+mutRef.name = "Alice";
 
-// user.name = "John"; // ❌ Throws BorrowError (Owner locked)
-// borrow(user);       // ❌ Throws BorrowError (Cannot borrow immutably right now)
+// user.name = "John"; // Throws BorrowError (Owner locked)
+// borrow(user);       // Throws BorrowError (Cannot borrow immutably right now)
 
 release(mutRef);
 
@@ -93,7 +92,7 @@ const user = own({ name: 'Prince' });
 const newUser = move(user);
 
 console.log(newUser.name); // "Prince"
-// user.name; // ❌ Throws MovedError
+// user.name; // Throws MovedError
 ```
 
 ## Rich Diagnostics

@@ -4,15 +4,15 @@ Borrow.js is a lightweight library that introduces Rust-inspired ownership and b
 
 No transpilers or build plugins are required—everything works out of the box using modern JavaScript Proxies!
 
-> [!WARNING]
-> **Performance Note**: Unlike Rust, where borrowing is a zero-cost abstraction evaluated entirely at compile-time, Borrow.js enforces these rules dynamically at *runtime*. Due to the heavy use of JavaScript Proxies, `structuredClone`, and capturing stack traces for rich error diagnostics, this library carries significant performance overhead. I am currently exploring moving to compile-time.
-
 ## Core Concepts
 
 - **Ownership**: Each managed object has exactly one owner.
 - **Immutable Borrow**: You can create any number of immutable borrows. The original owner cannot mutate the object while these borrows exist.
 - **Mutable Borrow**: You can create exactly one mutable borrow. No other borrows (mutable or immutable) can exist at the same time, and the owner loses access until it's released.
 - **Move Semantics**: Transfer ownership from one reference to another, immediately invalidating the old reference.
+
+> [!WARNING]
+> **Performance Note**: Unlike Rust, where borrowing is a zero-cost abstraction evaluated entirely at compile-time, Borrow.js enforces these rules dynamically at *runtime*. Due to the heavy use of JavaScript Proxies, `structuredClone`, and capturing stack traces for rich error diagnostics, this library carries significant performance overhead. I am currently exploring moving to compile-time.
 
 ## Installation
 
